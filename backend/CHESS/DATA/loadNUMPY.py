@@ -1,37 +1,47 @@
 import numpy as np
 import os
 import torch
-from torch.utils.data import DataLoader, TensorDataset
 
 
-def load_numpy() -> tuple[np.ndarray, np.ndarray]:
-    formatted_data_dir = "FORMATTED_DATA"
+def get_files(formatted_data_dir="DATA"):
+
     files = [
         name
         for name in os.listdir(formatted_data_dir)
         if os.path.isfile(os.path.join(formatted_data_dir, name))
     ]
 
-    assert len(files) == 2, f"Expected 2 files, found {files}"
+    evals = [file for file in files if "evals" in file]
+    boards = [file for file in files if "boards" in file]
 
-    board_file = [f for f in files if "boards" in f][0]
-    eval_file = [f for f in files if "evals" in f][0]
+    print("LOADED NEW FILES")
 
-    board = np.load(os.path.join(formatted_data_dir, board_file))
-    evals = np.load(os.path.join(formatted_data_dir, eval_file))
+    return boards, evals, formatted_data_dir
 
-    batch_size = 773
-    num_batches = len(board) // batch_size
-    board = board[: num_batches * batch_size].reshape(-1, batch_size, *board.shape[1:])
-    evals = evals[: num_batches * batch_size].reshape(-1, batch_size, *evals.shape[1:])
 
-    return board, evals
+def load_numpy(prevBoardIndex=None) -> tuple[np.ndarray, np.ndarray, int]:
+    boards, evals, formatted_data_dir = get_files()
+
+    if prevBoardIndex is None:
+        index = 0
+    else:
+        index = prevBoardIndex + 1
+
+    if index >= len(boards):
+        index = len(boards) - 1
+
+    board = np.load(os.path.join(formatted_data_dir, boards[index]))
+    eval = np.load(os.path.join(formatted_data_dir, evals[index]))
+
+    return board, eval
 
 
 def main() -> None:
-    board, evals = load_numpy()
+    board, _, _ = get_files()
 
-    print(board.shape, evals.shape)
+    for i in range((len(board) * 2)):
+        board, _ = load_numpy(i)
+        print(board.shape)
 
 
 if __name__ == "__main__":

@@ -94,9 +94,14 @@ class ChessHelper:
 
         for i in self.CHESS_PIECES:
             self.TOKENS[i] = len(self.TOKENS)
-            self.TOKENS[i.upper()] = len(self.TOKENS)
 
-        # print(self.TOKENS)
+        for i in list(self.TOKENS.keys()):
+            if i == ".":
+                continue
+
+            self.TOKENS[i.upper()] = self.TOKENS[i] * -1
+
+        print(self.TOKENS)
 
     def tokenize(self, board=None, debug=False):
         if board == None:
@@ -167,7 +172,7 @@ def process_move(piece_type, from_square, to_square):
 
 def main() -> None:
     chessHelperObj = ChessHelper()
-    print(chessHelperObj.tokenizeSingleSquare("g3"))
+    pprint(chessHelperObj.tokenize())
 
 
 if __name__ == "__main__":

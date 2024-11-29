@@ -35,37 +35,31 @@ class CHESSAPI:
         return torch.from_numpy(board_tensor).float().unsqueeze(0).cuda()
 
     def get_best_move(self):
+        board_copy = self.board.copy()
 
-        board = self.board
+        legal_moves = list(self.board.legal_moves)
+        best_move = None
+        best_score = -np.inf
 
-        board_tensor = self.board_to_tensor(board)
-
-        with torch.no_grad():
-            policy = self.model(board_tensor)
-
-        policy = policy.cpu().numpy().flatten()
-
-        legal_moves = self.chess_helper.legalMoves()
-
-        move_scores = {}
         for move in legal_moves:
-            move_index = move_to_index(move)
-            move_scores[move] = policy[move_index]
+            board_copy.push(move)
+            board_tensor = self.board_to_tensor(board_copy)
+            board_copy.pop()
 
-        best_move = max(move_scores, key=move_scores.get)
-        best_move_score = move_scores[best_move]
+            with torch.no_grad():
+                move_score = self.model(board_tensor).cpu().numpy().squeeze()
 
-        piece_type, from_square, to_square = best_move
+                if move_score > best_score:
+                    best_score = move_score
+                    best_move = move
 
-        self.board.push(chess.Move.from_uci(f"{from_square}{to_square}"))
-        return best_move_score
+        self.board.push(best_move)
+        return best_score
 
 
 def main() -> None:
-    chess_ai = ChessAI("backend/chess_policy_model.pth")
-    print(chess_ai.get_best_move())
-    print(chess_ai.get_best_move())
-    chess_ai.board = chess.Board()
+    chess_ai = CHESSAPI("backend/chess_policy_modelV3.pth")
+
     print(chess_ai.get_best_move())
 
 
